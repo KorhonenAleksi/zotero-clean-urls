@@ -16,9 +16,13 @@ and proxy links only work for members of one university.
 ## Use
 
 Select items (or Cmd/Ctrl+A for a whole collection or library), right-click,
-and pick **Remove database links…**. A dialog lists every item that would
-change and which database the link comes from. Nothing is removed until you
-click **Remove N links**; Cancel is the default button.
+and pick **Remove database links…**. A dialog lists the items that would
+change, each with the exact link that will be removed. Nothing is removed
+until you click **Remove N links**; Cancel is the default button.
+
+Every removed link is first appended to `clean-urls-log.csv` in your Zotero
+data folder (Settings → Advanced → Files and Folders → Show Data Directory),
+with the item key, title and full URL, so any link can be restored.
 
 ## What it removes
 

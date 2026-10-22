@@ -1,7 +1,7 @@
 {
   "name": "zotero-clean-urls",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Removes library-database and proxy links (EBSCO, ProQuest, JSTOR…) that clutter APA reference lists, after confirmation",
   "config": {
     "addonName": "Zotero Clean URLs",

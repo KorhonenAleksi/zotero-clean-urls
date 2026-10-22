@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   classifyLink,
+  displayLink,
   formatRemovalList,
+  logRow,
   linkToRemove,
   PlannedRemoval,
   summarizeSources,
@@ -135,18 +137,20 @@ describe("confirmation text", () => {
   const removal = (n: number, source = "EBSCO"): PlannedRemoval => ({
     citation: `Author${n} (2001)`,
     title: `Title ${n}`,
+    url: `https://www.jstor.org/stable/${n}`,
     match: { kind: "database", source, host: "x" },
   });
 
-  it("lists items and caps the list", () => {
+  it("lists each item with the link to be removed, capped", () => {
     const list = formatRemovalList(
       Array.from({ length: 18 }, (_, i) => removal(i + 1)),
       15,
     );
     const lines = list.split("\n");
-    expect(lines).toHaveLength(16);
-    expect(lines[0]).toBe("• Author1 (2001) — Title 1  [EBSCO]");
-    expect(lines[15]).toBe("…and 3 more");
+    expect(lines).toHaveLength(31);
+    expect(lines[0]).toBe("• Author1 (2001) — Title 1");
+    expect(lines[1]).toBe("    ✕ jstor.org/stable/1");
+    expect(lines[30]).toBe("…and 3 more");
   });
 
   it("shortens long titles", () => {
@@ -163,5 +167,34 @@ describe("confirmation text", () => {
         removal(3, "EBSCO"),
       ]),
     ).toBe("EBSCO 2, JSTOR 1");
+  });
+});
+
+describe("displayLink", () => {
+  it("drops scheme and www, and shortens", () => {
+    expect(displayLink("https://www.jstor.org/stable/1704346")).toBe(
+      "jstor.org/stable/1704346",
+    );
+    const long = displayLink(
+      "https://search.ebscohost.com/login.aspx?direct=true&db=bth&AN=9509210295&site=ehost-live&authtype=sso&custid=ns000000",
+    );
+    expect(long).toHaveLength(70);
+    expect(long.startsWith("search.ebscohost.com/login.aspx?")).toBe(true);
+    expect(long.endsWith("…")).toBe(true);
+  });
+});
+
+describe("logRow", () => {
+  it("writes a CSV line, quoting fields with commas or quotes", () => {
+    expect(
+      logRow("2026-10-22T20:00:00.000Z", "1/W6EFZUS7", "journalArticle", {
+        citation: "Langley (1999)",
+        title: 'Strategies for "Theorizing", from Process Data',
+        url: "https://www.proquest.com/docview/210946043",
+        match: { kind: "database", source: "ProQuest", host: "x" },
+      }),
+    ).toBe(
+      '2026-10-22T20:00:00.000Z,1/W6EFZUS7,journalArticle,ProQuest,"Strategies for ""Theorizing"", from Process Data",https://www.proquest.com/docview/210946043',
+    );
   });
 });

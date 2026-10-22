@@ -128,6 +128,7 @@ export interface PlannedRemoval {
   /** e.g. "Langley (1999)" */
   citation: string;
   title: string;
+  url: string;
   match: LinkMatch;
 }
 
@@ -135,18 +136,30 @@ function shorten(s: string, max: number): string {
   return s.length > max ? s.slice(0, max - 1).trimEnd() + "…" : s;
 }
 
+/** A URL without scheme and "www.", shortened for display. */
+export function displayLink(url: string, max = 70): string {
+  return shorten(
+    url
+      .trim()
+      .replace(/^https?:\/\//i, "")
+      .replace(/^www\./i, ""),
+    max,
+  );
+}
+
 /**
- * One line per item for the confirmation dialog, capped at `limit` lines
- * with a final "…and N more" line.
+ * Two lines per item for the confirmation dialog (the item, then the link
+ * that will be removed), capped at `limit` items with a final "…and N more".
  */
 export function formatRemovalList(
   removals: PlannedRemoval[],
-  limit = 15,
+  limit = 12,
 ): string {
   const lines = removals
     .slice(0, limit)
     .map(
-      (r) => `• ${r.citation} — ${shorten(r.title, 60)}  [${r.match.source}]`,
+      (r) =>
+        `• ${r.citation} — ${shorten(r.title, 60)}\n    ✕ ${displayLink(r.url)}`,
     );
   if (removals.length > limit) {
     lines.push(`…and ${removals.length - limit} more`);
@@ -164,4 +177,30 @@ export function summarizeSources(removals: PlannedRemoval[]): string {
     .sort((a, b) => b[1] - a[1])
     .map(([source, n]) => `${source} ${n}`)
     .join(", ");
+}
+
+export const LOG_HEADER =
+  "removed_at,library_key,item_type,source,title,removed_url";
+
+function csvField(value: string): string {
+  return /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+
+/** One CSV line for the removal log, so a removed link can be restored. */
+export function logRow(
+  removedAt: string,
+  libraryKey: string,
+  itemType: string,
+  removal: PlannedRemoval,
+): string {
+  return [
+    removedAt,
+    libraryKey,
+    itemType,
+    removal.match.source,
+    removal.title,
+    removal.url,
+  ]
+    .map(csvField)
+    .join(",");
 }

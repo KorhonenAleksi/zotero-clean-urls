@@ -1,6 +1,8 @@
 import {
   formatRemovalList,
   linkToRemove,
+  LOG_HEADER,
+  logRow,
   PlannedRemoval,
   summarizeSources,
 } from "../core/links";
@@ -64,9 +66,10 @@ async function cleanItems(selected: Zotero.Item[]) {
 
   const planned: { item: Zotero.Item; removal: PlannedRemoval }[] = [];
   for (const item of candidates) {
+    const url = field(item, "url");
     const match = linkToRemove({
       itemType: item.itemType,
-      url: field(item, "url"),
+      url,
       DOI: field(item, "DOI"),
       extra: field(item, "extra"),
     });
@@ -76,6 +79,7 @@ async function cleanItems(selected: Zotero.Item[]) {
       removal: {
         citation: citationLabel(item),
         title: field(item, "title"),
+        url,
         match,
       },
     });
@@ -117,6 +121,9 @@ async function cleanItems(selected: Zotero.Item[]) {
   );
   if (choice !== 0) return;
 
+  // Log before clearing anything, so every removed link can be restored.
+  await appendToLog(planned);
+
   let removed = 0;
   for (const { item, removal } of planned) {
     item.setField("url", "");
@@ -127,6 +134,22 @@ async function cleanItems(selected: Zotero.Item[]) {
     removed++;
   }
   showResult(getString("clean-done", { args: { count: removed } }));
+}
+
+export const LOG_FILE = "clean-urls-log.csv";
+
+async function appendToLog(
+  planned: { item: Zotero.Item; removal: PlannedRemoval }[],
+) {
+  const path = PathUtils.join(Zotero.DataDirectory.dir, LOG_FILE);
+  const removedAt = new Date().toISOString();
+  const rows = planned.map(({ item, removal }) =>
+    logRow(removedAt, item.libraryKey, item.itemType, removal),
+  );
+  if (!(await IOUtils.exists(path))) rows.unshift(LOG_HEADER);
+  await IOUtils.writeUTF8(path, rows.join("\n") + "\n", {
+    mode: "appendOrCreate",
+  });
 }
 
 function showResult(text: string) {
