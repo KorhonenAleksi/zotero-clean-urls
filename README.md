@@ -46,8 +46,14 @@ never touched. Read-only group libraries are skipped.
 
 ## Install
 
-Zotero: Tools → Plugins → gear icon → Install Plugin From File…, and pick
-`build/zotero-clean-urls.xpi`.
+Requires Zotero 9 or 10.
+
+1. Download `zotero-clean-urls.xpi` from the latest
+   [release](https://github.com/KorhonenAleksi/zotero-clean-urls/releases/latest).
+2. In Zotero: Tools → Plugins → gear icon → Install Plugin From File…, and
+   pick the downloaded file.
+
+Zotero checks for new versions automatically.
 
 ## Development
 
@@ -56,6 +62,8 @@ npm install
 npm test            # unit tests for the pure core (src/core), runs in Node
 npm run build       # → build/zotero-clean-urls.xpi
 npm start           # hot-reload into a separate dev Zotero profile (needs .env, see .env.example)
+npm run release     # bump the version, tag and push; GitHub Actions then
+                    # publishes the release and update.json
 ```
 
 Layout: `src/core/links.ts` holds the link rules as pure TypeScript with no
