@@ -33,7 +33,10 @@ describe("classifyLink", () => {
   it("recognises library proxies before the database behind them", () => {
     expect(
       classifyLink("https://www.jstor.org.libproxy.example.edu/stable/2393553"),
-    ).toMatchObject({ kind: "proxy", host: "www.jstor.org.libproxy.example.edu" });
+    ).toMatchObject({
+      kind: "proxy",
+      host: "www.jstor.org.libproxy.example.edu",
+    });
     expect(
       classifyLink("https://login.example.edu/login?url=https://example.org"),
     ).toMatchObject({ kind: "proxy" });
